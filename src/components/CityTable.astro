@@ -1,0 +1,22 @@
+---
+import type { City } from '../lib/data';
+import { man, unitMan, pct } from '../lib/format';
+
+interface Props { cities: City[] }
+const cities = [...Astro.props.cities].sort((a, b) => (b.stats.unitPrice ?? 0) - (a.stats.unitPrice ?? 0));
+---
+<div class="card scroll">
+  <table>
+    <thead><tr><th>市区町村</th><th>㎡単価</th><th>価格（中央値）</th><th>前年比</th></tr></thead>
+    <tbody>
+      {cities.map((c) => (
+        <tr>
+          <td><a href={`/${c.prefSlug}/${c.code}/`}>{c.name}</a></td>
+          <td>{unitMan(c.stats.unitPrice)}</td>
+          <td>{man(c.stats.price)}</td>
+          <td>{pct(c.stats.yoy)}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>

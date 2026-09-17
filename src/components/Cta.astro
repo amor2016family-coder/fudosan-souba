@@ -1,0 +1,21 @@
+---
+// 一括査定への導線。紹介リンク未設定のあいだは何も表示しない
+import { AFFILIATE } from '../config';
+
+interface Props { place: string }
+const { place } = Astro.props;
+---
+{AFFILIATE.url && (
+  <aside class="cta">
+    <span class="pr">PR</span>
+    <p>{place}の{AFFILIATE.lead}</p>
+    <a href={AFFILIATE.url} rel="sponsored nofollow noopener" target="_blank">{AFFILIATE.label}</a>
+  </aside>
+)}
+
+<style>
+  .cta { position: relative; margin: 28px 0; padding: 20px 16px 16px; border: 2px solid var(--cta); border-radius: 12px; background: var(--surface); text-align: center; }
+  .pr { position: absolute; top: 8px; right: 10px; font-size: 11px; color: var(--muted); border: 1px solid var(--line); padding: 0 6px; border-radius: 4px; }
+  p { margin: 0 0 12px; font-weight: 600; }
+  a { display: inline-block; background: var(--cta); color: #fff; font-weight: 700; text-decoration: none; padding: 12px 28px; border-radius: 999px; }
+</style>

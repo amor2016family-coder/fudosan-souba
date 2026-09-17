@@ -1,0 +1,42 @@
+---
+import Base from '../../../layouts/Base.astro';
+import StatsView from '../../../components/StatsView.astro';
+import { data, prefBySlug, cityByCode, commentary } from '../../../lib/data';
+import type { District } from '../../../lib/data';
+import { man } from '../../../lib/format';
+
+export function getStaticPaths() {
+  return data.districts.map((d) => ({ params: { pref: d.prefSlug, city: d.cityCode, district: d.name }, props: { district: d } }));
+}
+const { district: d } = Astro.props as { district: District };
+const pref = prefBySlug(d.prefSlug);
+const city = cityByCode(d.cityCode);
+const place = `${d.cityName}${d.name}`;
+const year = d.stats.trend.at(-1)?.year ?? data.latest.year;
+const title = `${place}の中古マンション相場【${year}年】取引価格と推移`;
+const siblings = data.districts.filter((x) => x.cityCode === d.cityCode && x.name !== d.name);
+---
+<Base
+  title={title}
+  description={`${pref.name}${place}の中古マンションの取引価格は中央値${man(d.stats.price)}。国土交通省の取引データから、実際の取引事例と価格の推移をまとめました。`}
+  crumbs={[
+    { name: 'トップ', href: '/' },
+    { name: pref.name, href: `/${pref.slug}/` },
+    { name: city.name, href: `/${pref.slug}/${city.code}/` },
+    { name: d.name, href: `/${pref.slug}/${city.code}/${d.name}/` },
+  ]}
+>
+  <h1>{title}</h1>
+  <StatsView place={place} stats={d.stats} year={year} commentary={commentary(`${d.cityCode}-${d.name}`)} />
+  {siblings.length > 0 && (
+    <>
+      <h2>{city.name}のほかの町名</h2>
+      <p>{siblings.map((s) => <a href={`/${pref.slug}/${city.code}/${s.name}/`} class="chip">{s.name}</a>)}</p>
+      <p><a href={`/${pref.slug}/${city.code}/`}>{city.name}全体の相場を見る →</a></p>
+    </>
+  )}
+</Base>
+
+<style>
+  .chip { display: inline-block; margin: 0 6px 8px 0; padding: 2px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); text-decoration: none; font-size: 14px; }
+</style>

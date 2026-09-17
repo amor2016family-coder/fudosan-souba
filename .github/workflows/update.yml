@@ -1,0 +1,60 @@
+# データ取得 → 集計 → ビルド → Cloudflare Pagesへ公開
+# 毎週月曜に実行（新しい四半期が公表されると自動で反映される）。解説文がpushされたときも公開し直す
+name: update
+
+on:
+  schedule:
+    - cron: '0 18 * * 0' # 日本時間 月曜3時
+  push:
+    branches: [main]
+    paths: ['commentary/**', 'src/**', 'astro.config.mjs']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      # 取得済みの四半期データを使い回し、APIへのアクセスを最小限にする
+      - uses: actions/cache@v4
+        with:
+          path: data/raw
+          key: raw-${{ github.run_id }}
+          restore-keys: raw-
+
+      - name: データ取得
+        if: github.event_name != 'push'
+        run: npm run fetch
+        env:
+          REINFOLIB_API_KEY: ${{ secrets.REINFOLIB_API_KEY }}
+
+      - run: npm run aggregate
+
+      - name: 集計結果をコミット（AIの解説文作成が読む）
+        if: github.event_name != 'push'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/site.json
+          git diff --cached --quiet || (git commit -m "データ更新" && git push)
+
+      - run: npm run build
+
+      - name: Cloudflare Pagesへ公開
+        run: npx wrangler@3 pages deploy dist --project-name=fudosan-souba --branch=main
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

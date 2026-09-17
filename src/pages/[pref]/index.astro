@@ -1,0 +1,25 @@
+---
+import Base from '../../layouts/Base.astro';
+import StatsView from '../../components/StatsView.astro';
+import CityTable from '../../components/CityTable.astro';
+import { data, commentary } from '../../lib/data';
+import type { Prefecture } from '../../lib/data';
+import { man } from '../../lib/format';
+
+export function getStaticPaths() {
+  return data.prefectures.map((pref) => ({ params: { pref: pref.slug }, props: { pref } }));
+}
+const { pref } = Astro.props as { pref: Prefecture };
+const year = pref.stats.trend.at(-1)?.year ?? data.latest.year;
+const title = `${pref.name}の中古マンション相場【${year}年】市区町村別の価格・推移`;
+---
+<Base
+  title={title}
+  description={`${pref.name}の中古マンションの取引価格は中央値${man(pref.stats.price)}。国土交通省の取引データから、市区町村別の相場と5年間の推移をまとめました。`}
+  crumbs={[{ name: 'トップ', href: '/' }, { name: pref.name, href: `/${pref.slug}/` }]}
+>
+  <h1>{title}</h1>
+  <StatsView place={pref.name} stats={pref.stats} year={year} commentary={commentary(pref.code)} />
+  <h2>市区町村別の相場</h2>
+  <CityTable cities={data.cities.filter((c) => c.prefSlug === pref.slug)} />
+</Base>

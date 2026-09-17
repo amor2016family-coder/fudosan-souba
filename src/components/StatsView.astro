@@ -1,0 +1,106 @@
+---
+// 市区町村・町名ページ共通の相場表示
+import type { Stats } from '../lib/data';
+import { man, unitMan, tsuboMan, pct } from '../lib/format';
+import TrendChart from './TrendChart.astro';
+import Cta from './Cta.astro';
+
+interface Props { place: string; stats: Stats; year: number; commentary: string | null }
+const { place, stats: s, year, commentary } = Astro.props;
+const paragraphs = commentary?.split(/\n{2,}/) ?? [];
+---
+<section class="tiles">
+  <div class="card tile">
+    <div class="k">平均的な取引価格</div>
+    <div class="v">{man(s.price)}</div>
+    <div class="note">{year}年・中央値</div>
+  </div>
+  <div class="card tile">
+    <div class="k">㎡単価</div>
+    <div class="v">{unitMan(s.unitPrice)}</div>
+    <div class="note">{tsuboMan(s.unitPrice)}</div>
+  </div>
+  <div class="card tile">
+    <div class="k">前年比</div>
+    <div class={`v ${s.yoy == null ? '' : s.yoy >= 0 ? 'up' : 'down'}`}>{pct(s.yoy)}</div>
+    <div class="note">㎡単価ベース</div>
+  </div>
+  <div class="card tile">
+    <div class="k">取引件数</div>
+    <div class="v">{s.latestYearCount.toLocaleString('ja-JP')}件</div>
+    <div class="note">{year}年</div>
+  </div>
+</section>
+
+{paragraphs.length > 0 && (
+  <section>
+    <h2>{place}の相場のポイント</h2>
+    {paragraphs.map((p) => <p>{p}</p>)}
+  </section>
+)}
+
+<h2>{place}の中古マンション価格の推移</h2>
+<div class="card"><TrendChart trend={s.trend} /></div>
+
+<Cta place={place} />
+
+{s.byPlan.length > 0 && (
+  <>
+    <h2>間取り別の相場</h2>
+    <div class="card scroll">
+      <table>
+        <thead><tr><th>間取り</th><th>価格</th><th>面積</th><th>件数</th></tr></thead>
+        <tbody>
+          {s.byPlan.map((p) => (
+            <tr><td>{p.plan}</td><td>{man(p.price)}</td><td>{p.area}㎡</td><td>{p.count}件</td></tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="note">価格はいずれも中央値。過去5年分の取引から集計しています。</p>
+  </>
+)}
+
+{s.byAge.length > 0 && (
+  <>
+    <h2>築年数別の相場</h2>
+    <div class="card scroll">
+      <table>
+        <thead><tr><th>築年数</th><th>㎡単価</th><th>価格</th><th>件数</th></tr></thead>
+        <tbody>
+          {s.byAge.map((a) => (
+            <tr><td>{a.label}</td><td>{unitMan(a.unitPrice)}</td><td>{man(a.price)}</td><td>{a.count}件</td></tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </>
+)}
+
+<h2>最近の取引事例</h2>
+<div class="card scroll">
+  <table>
+    <thead><tr><th>時期・地区</th><th>間取り・面積</th><th>築年</th><th>価格</th></tr></thead>
+    <tbody>
+      {s.recent.map((r) => (
+        <tr>
+          <td>{r.year}年{r.quarter}Q<br /><span class="note">{r.district || '—'}</span></td>
+          <td>{r.plan || '—'}<br /><span class="note">{r.area}㎡</span></td>
+          <td>{r.buildYear ? `${r.buildYear}年` : '—'}</td><td>{man(r.price)}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
+
+<Cta place={place} />
+
+<style>
+  .tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  @media (min-width: 720px) { .tiles { grid-template-columns: repeat(4, 1fr); } }
+  .tile { padding: 12px 14px; }
+  .k { font-size: 13px; color: var(--muted); }
+  .v { font-size: clamp(18px, 4.5vw, 22px); font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.4; }
+  .up { color: var(--up); }
+  .down { color: var(--down); }
+</style>

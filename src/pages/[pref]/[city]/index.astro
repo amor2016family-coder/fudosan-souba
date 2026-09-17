@@ -1,0 +1,47 @@
+---
+import Base from '../../../layouts/Base.astro';
+import StatsView from '../../../components/StatsView.astro';
+import { data, prefBySlug, commentary } from '../../../lib/data';
+import type { City } from '../../../lib/data';
+import { man, unitMan } from '../../../lib/format';
+
+export function getStaticPaths() {
+  return data.cities.map((city) => ({ params: { pref: city.prefSlug, city: city.code }, props: { city } }));
+}
+const { city } = Astro.props as { city: City };
+const pref = prefBySlug(city.prefSlug);
+const year = city.stats.trend.at(-1)?.year ?? data.latest.year;
+const title = `${city.name}の中古マンション相場【${year}年】間取り別・築年数別の価格`;
+const districts = data.districts.filter((d) => d.cityCode === city.code);
+---
+<Base
+  title={title}
+  description={`${pref.name}${city.name}の中古マンションの取引価格は中央値${man(city.stats.price)}（㎡単価${unitMan(city.stats.unitPrice)}）。国土交通省の取引データから、間取り別・築年数別の相場と推移をまとめました。`}
+  crumbs={[
+    { name: 'トップ', href: '/' },
+    { name: pref.name, href: `/${pref.slug}/` },
+    { name: city.name, href: `/${pref.slug}/${city.code}/` },
+  ]}
+>
+  <h1>{title}</h1>
+  <StatsView place={city.name} stats={city.stats} year={year} commentary={commentary(city.code)} />
+  {districts.length > 0 && (
+    <>
+      <h2>{city.name}の町名別の相場</h2>
+      <div class="card scroll">
+        <table>
+          <thead><tr><th>町名</th><th>㎡単価</th><th>価格（中央値）</th></tr></thead>
+          <tbody>
+            {districts.map((d) => (
+              <tr>
+                <td><a href={`/${pref.slug}/${city.code}/${d.name}/`}>{d.name}</a></td>
+                <td>{unitMan(d.stats.unitPrice)}</td>
+                <td>{man(d.stats.price)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
+  )}
+</Base>

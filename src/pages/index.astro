@@ -1,0 +1,17 @@
+---
+import Base from '../layouts/Base.astro';
+import CityTable from '../components/CityTable.astro';
+import { SITE } from '../config';
+import { data } from '../lib/data';
+import { period } from '../lib/format';
+---
+<Base title={`${SITE.name}｜実際の取引データでわかる中古マンション相場`} description={SITE.description}>
+  <h1>実際の取引データでわかる<br />中古マンション相場</h1>
+  <p class="lead">{SITE.description}（最新データ：{period(data.latest.year, data.latest.quarter)}の取引まで）</p>
+  {data.prefectures.map((p) => (
+    <section>
+      <h2><a href={`/${p.slug}/`}>{p.name}</a>の市区町村別の相場</h2>
+      <CityTable cities={data.cities.filter((c) => c.prefSlug === p.slug)} />
+    </section>
+  ))}
+</Base>
