@@ -12,7 +12,7 @@
 1. `data/site.json` を読む。`isSample` が `true` なら何もせず終了する。
 2. 解説文が必要なページを選ぶ（優先順）。
    - 対象：`prefectures`（キーは都道府県コード）、`cities`（キーは市区町村コード）、`districts`（キーは `{cityCode}-{name}`）
-   - `commentary/{キー}.md` が存在しない、またはファイル先頭の `dataVersion` が site.json の `latest`（例 `2026Q1`）と違うもの
+   - `commentary/{キー}.md` が存在しない、またはファイル先頭の `dataVersion` が site.json の `latest` を `{year}Q{quarter}` の形にしたもの（例 `2026Q1`）と違うもの
    - 都道府県 → 市区町村 → 町名（取引件数 `stats.count` が多い順）の順に、最大30件
 3. 各ページについて、そのページの `stats` だけを根拠に解説文を書き、`commentary/{キー}.md` に保存する。
 4. 全件を書き終えたら、下の「確認」を全ファイルに対して行い、問題があれば直す。

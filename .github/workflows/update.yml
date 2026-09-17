@@ -41,7 +41,10 @@ jobs:
         env:
           REINFOLIB_API_KEY: ${{ secrets.REINFOLIB_API_KEY }}
 
-      - run: npm run aggregate
+      # 解説文だけの更新（push）のときは、コミット済みの集計結果をそのまま使う
+      - name: 集計
+        if: github.event_name != 'push'
+        run: npm run aggregate
 
       - name: 集計結果をコミット（AIの解説文作成が読む）
         if: github.event_name != 'push'
@@ -54,7 +57,7 @@ jobs:
       - run: npm run build
 
       - name: Cloudflare Pagesへ公開
-        run: npx wrangler@3 pages deploy dist --project-name=fudosan-souba --branch=main
+        run: npx wrangler pages deploy dist --project-name=fudosan-souba --branch=main
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
