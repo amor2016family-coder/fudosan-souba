@@ -7,8 +7,8 @@ import {
 
 // これより件数が少ない集計値は、ぶれが大きいので表示しない
 const MIN_COUNT = 5;
-// 町名ページを作る最低件数（薄いページを量産しないため）
-const MIN_DISTRICT_COUNT = 15;
+// 町名ページを作る条件（薄いページを量産しないため）：5年で30件以上、かつ最新年の価格が出せること
+const MIN_DISTRICT_COUNT = 30;
 
 const toNum = (s) => {
   const n = parseFloat(String(s ?? '').replace(/[^\d.]/g, ''));
@@ -125,16 +125,19 @@ for (const pref of PREFECTURES) {
   const cityCodes = [...new Set(rows.map((r) => r.cityCode))].sort();
   const cities = cityCodes.map((code) => {
     const rs = rows.filter((r) => r.cityCode === code);
-    const districtNames = [...new Set(rs.map((r) => r.district))]
+    const districts = [...new Set(rs.map((r) => r.district))]
       .filter((d) => d && rs.filter((r) => r.district === d).length >= MIN_DISTRICT_COUNT)
-      .sort((a, b) => a.localeCompare(b, 'ja'));
-    const districts = districtNames.map((name) => ({
-      prefSlug: pref.slug,
-      cityCode: code,
-      cityName: rs[0].cityName,
-      name,
-      stats: stats(rs.filter((r) => r.district === name), latestFullYear),
-    }));
+      .map((name) => ({
+        prefSlug: pref.slug,
+        cityCode: code,
+        cityName: rs[0].cityName,
+        name,
+        stats: stats(rs.filter((r) => r.district === name), latestFullYear),
+      }))
+      .filter((d) => d.stats.price !== null)
+      // 漢字の並び順は読みと一致しないため、取引の多い町を上に並べる
+      .sort((a, b) => b.stats.count - a.stats.count);
+    const districtNames = districts.map((d) => d.name);
     site.districts.push(...districts);
     return {
       prefSlug: pref.slug,
@@ -144,10 +147,12 @@ for (const pref of PREFECTURES) {
       stats: stats(rs, latestFullYear),
     };
   });
-  site.cities.push(...cities);
+  // 最新年の価格が出せない（取引が少なすぎる）市区町村はページを作らない
+  const shown = cities.filter((c) => c.stats.price !== null);
+  site.cities.push(...shown);
   site.prefectures.push({
     ...pref,
-    cities: cityCodes,
+    cities: shown.map((c) => c.code),
     stats: stats(rows, latestFullYear),
   });
 }

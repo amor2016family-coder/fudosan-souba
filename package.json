@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "sample": "node scripts/sample.mjs",
-    "fetch": "node scripts/fetch.mjs",
+    "fetch": "node --env-file-if-exists=.env scripts/fetch.mjs",
     "aggregate": "node scripts/aggregate.mjs",
     "dev": "astro dev",
     "build": "astro build",
