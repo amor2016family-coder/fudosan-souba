@@ -1,7 +1,7 @@
 // サイト全体の設定。ドメインや紹介リンクが決まったらここを書き換える
 export const SITE = {
-  name: 'マンション相場ナビ',
-  url: 'https://example.com', // TODO: 取得したドメインに変更
+  name: '住まい相場',
+  url: 'https://sumaisouba.com',
   description: '国土交通省の実際の取引データから、市区町村・町名ごとの中古マンション相場を毎四半期更新でお届けします。',
 };
 
