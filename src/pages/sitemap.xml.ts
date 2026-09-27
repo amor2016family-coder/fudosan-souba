@@ -4,6 +4,8 @@ import { data } from '../lib/data';
 export function GET() {
   const paths = [
     '/',
+    '/about/',
+    '/privacy/',
     ...data.prefectures.map((p) => `/${p.slug}/`),
     ...data.cities.map((c) => `/${c.prefSlug}/${c.code}/`),
     ...data.districts.map((d) => `/${d.prefSlug}/${d.cityCode}/${encodeURIComponent(d.name)}/`),

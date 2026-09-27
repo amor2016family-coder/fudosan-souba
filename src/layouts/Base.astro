@@ -55,6 +55,7 @@ const breadcrumbLd = crumbs.length && {
       <div class="wrap">
         <p>{CREDIT}</p>
         <p>掲載している相場は過去の取引価格を集計したもので、個別の物件の価格を示すものではありません。当サイトは広告（アフィリエイト）による収益で運営しています。</p>
+        <p class="links"><a href="/about/">運営者情報</a><a href="/privacy/">プライバシーポリシー</a></p>
         <p>© {new Date().getFullYear()} {SITE.name}</p>
       </div>
     </footer>
@@ -116,5 +117,6 @@ const breadcrumbLd = crumbs.length && {
   .scroll { overflow-x: auto; }
   @media (max-width: 480px) { table { font-size: 13px; } .card.scroll { padding: 8px 10px; } }
   .note { font-size: 13px; color: var(--muted); }
+  .site-footer .links { display: flex; gap: 16px; }
   .site-footer { margin-top: 64px; padding: 24px 0 40px; border-top: 1px solid var(--line); font-size: 12px; color: var(--muted); }
 </style>
