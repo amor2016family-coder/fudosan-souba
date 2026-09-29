@@ -14,9 +14,14 @@ const cities = [...Astro.props.cities].sort((a, b) => (b.stats.unitPrice ?? 0) -
           <td><a href={`/${c.prefSlug}/${c.code}/`}>{c.name}</a></td>
           <td>{unitMan(c.stats.unitPrice)}</td>
           <td>{man(c.stats.price)}</td>
-          <td>{pct(c.stats.yoy)}</td>
+          <td class={c.stats.yoy == null ? '' : c.stats.yoy >= 0 ? 'up' : 'down'}>{pct(c.stats.yoy)}</td>
         </tr>
       ))}
     </tbody>
   </table>
 </div>
+
+<style>
+  .up { color: var(--up); }
+  .down { color: var(--down); }
+</style>

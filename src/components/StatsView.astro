@@ -5,15 +5,15 @@ import { man, unitMan, tsuboMan, pct } from '../lib/format';
 import TrendChart from './TrendChart.astro';
 import Cta from './Cta.astro';
 
-interface Props { place: string; stats: Stats; year: number; commentary: string | null }
-const { place, stats: s, year, commentary } = Astro.props;
+interface Props { place: string; stats: Stats; year: number; commentary: string | null; showDistrict?: boolean }
+const { place, stats: s, year, commentary, showDistrict = true } = Astro.props;
 const paragraphs = commentary?.split(/\n{2,}/) ?? [];
 ---
 <section class="tiles">
   <div class="card tile">
-    <div class="k">平均的な取引価格</div>
+    <div class="k">取引価格（中央値）</div>
     <div class="v">{man(s.price)}</div>
-    <div class="note">{year}年・中央値</div>
+    <div class="note">{year}年</div>
   </div>
   <div class="card tile">
     <div class="k">㎡単価</div>
@@ -80,11 +80,11 @@ const paragraphs = commentary?.split(/\n{2,}/) ?? [];
 <h2>最近の取引事例</h2>
 <div class="card scroll">
   <table>
-    <thead><tr><th>時期・地区</th><th>間取り・面積</th><th>築年</th><th>価格</th></tr></thead>
+    <thead><tr><th>{showDistrict ? '時期・地区' : '時期'}</th><th>間取り・面積</th><th>築年</th><th>価格</th></tr></thead>
     <tbody>
       {s.recent.map((r) => (
         <tr>
-          <td>{r.year}年{r.quarter}Q<br /><span class="note">{r.district || '—'}</span></td>
+          <td>{r.year}年{r.quarter}Q{showDistrict && <><br /><span class="note">{r.district || '—'}</span></>}</td>
           <td>{r.plan || '—'}<br /><span class="note">{r.area}㎡</span></td>
           <td>{r.buildYear ? `${r.buildYear}年` : '—'}</td><td>{man(r.price)}</td>
         </tr>
