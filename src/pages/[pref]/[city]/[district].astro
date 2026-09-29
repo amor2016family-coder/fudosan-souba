@@ -27,7 +27,7 @@ const siblings = data.districts.filter((x) => x.cityCode === d.cityCode && x.nam
   ]}
 >
   <h1>{title}</h1>
-  <StatsView place={place} stats={d.stats} year={year} commentary={commentary(`${d.cityCode}-${d.name}`)} />
+  <StatsView place={place} stats={d.stats} year={year} commentary={commentary(`${d.cityCode}-${d.name}`)} showDistrict={false} />
   {siblings.length > 0 && (
     <>
       <h2>{city.name}のほかの町名</h2>
