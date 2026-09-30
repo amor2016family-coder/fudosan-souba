@@ -1,0 +1,20 @@
+---
+// 空き家・借地権など特殊な物件向けの補助リンク。目立たせず、ページ末尾に1か所だけ置く
+import { AFFILIATE_SUB } from '../config';
+---
+{AFFILIATE_SUB.url && (
+  <p class="sub">
+    <span class="pr">PR</span>
+    {AFFILIATE_SUB.lead}
+    <a href={AFFILIATE_SUB.url} rel="sponsored nofollow noopener" target="_blank">{AFFILIATE_SUB.label}</a>。
+    {AFFILIATE_SUB.impression && (
+      <img src={AFFILIATE_SUB.impression} width="1" height="1" alt="" loading="lazy" />
+    )}
+  </p>
+)}
+
+<style>
+  .sub { font-size: 13px; color: var(--muted); margin: 20px 0 0; }
+  .pr { font-size: 11px; border: 1px solid var(--line); padding: 0 6px; border-radius: 4px; margin-right: 6px; }
+  img { width: 1px; height: 1px; border: 0; }
+</style>

@@ -4,6 +4,7 @@ import type { Stats } from '../lib/data';
 import { man, unitMan, tsuboMan, pct } from '../lib/format';
 import TrendChart from './TrendChart.astro';
 import Cta from './Cta.astro';
+import SubCta from './SubCta.astro';
 
 interface Props { place: string; stats: Stats; year: number; commentary: string | null; showDistrict?: boolean }
 const { place, stats: s, year, commentary, showDistrict = true } = Astro.props;
@@ -94,6 +95,8 @@ const paragraphs = commentary?.split(/\n{2,}/) ?? [];
 </div>
 
 <Cta place={place} />
+<SubCta />
+
 
 <style>
   .tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }

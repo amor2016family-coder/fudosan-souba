@@ -14,6 +14,14 @@ export const AFFILIATE = {
   lead: 'いくらで売れる？ 複数の不動産会社の査定額を無料で比較できます。',
 };
 
+// 補助の紹介リンク（空き家・借地権など、通常の査定が難しい物件向け）。控えめな文字リンクで1か所だけ置く
+export const AFFILIATE_SUB = {
+  url: 'https://px.a8.net/svt/ejp?a8mat=4BCMO3+9CDXKI+5TF6+5YJRM',
+  impression: 'https://www14.a8.net/0.gif?a8mat=4BCMO3+9CDXKI+5TF6+5YJRM',
+  lead: '空き家・借地権・再建築不可など、通常の査定が難しい物件をお持ちの方は',
+  label: '買取の相談もできます',
+};
+
 // 不動産情報ライブラリAPI利用規約で求められるクレジット表示
 export const CREDIT =
   'このサービスは、国土交通省の不動産情報ライブラリのAPI機能を使用していますが、提供情報の最新性、正確性、完全性等が保証されたものではありません。';
