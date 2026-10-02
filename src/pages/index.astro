@@ -3,15 +3,109 @@ import Base from '../layouts/Base.astro';
 import CityTable from '../components/CityTable.astro';
 import { SITE } from '../config';
 import { data } from '../lib/data';
-import { period } from '../lib/format';
+import { man, unitMan, pct, period } from '../lib/format';
+
+const pref = data.prefectures[0];
+const year = pref?.stats.trend.at(-1)?.year ?? data.latest.year;
+const cities = data.cities.filter((c) => c.prefSlug === pref?.slug);
+const districts = data.districts;
 ---
-<Base title={`${SITE.name}｜実際の取引データでわかる中古マンション相場`} description={SITE.description}>
-  <h1>実際の取引データでわかる<br />中古マンション相場</h1>
-  <p class="lead">{SITE.description}（最新データ：{period(data.latest.year, data.latest.quarter)}の取引まで）</p>
-  {data.prefectures.map((p) => (
-    <section>
-      <h2><a href={`/${p.slug}/`}>{p.name}</a>の市区町村別の相場</h2>
-      <CityTable cities={data.cities.filter((c) => c.prefSlug === p.slug)} />
+<Base
+  title={`${SITE.name}｜実際の取引データでわかる中古マンション相場`}
+  description={SITE.description}
+>
+  <section class="hero">
+    <p class="eyebrow">国土交通省の取引データを集計</p>
+    <h1>実際に売れた価格でわかる<br />中古マンションの相場</h1>
+    <p class="lead">
+      不動産会社の「売り出し価格」ではなく、<strong>実際に取引された価格</strong>を市区町村・町名ごとに集計しています。
+      東京都の{data.cities.length}市区町村・{districts.length}町名、全{(data.cities.length + districts.length + 1).toLocaleString('ja-JP')}ページ。無料・登録不要です。
+    </p>
+    <div class="badges">
+      <span class="badge">出典：国土交通省 不動産情報ライブラリ</span>
+      <span class="badge">最新データ：{period(data.latest.year, data.latest.quarter)}</span>
+      <span class="badge">四半期ごとに自動更新</span>
+    </div>
+  </section>
+
+  {pref && (
+    <section class="headline card">
+      <h2 class="plain">{pref.name}全体の相場（{year}年）</h2>
+      <div class="nums">
+        <div><span class="k">取引価格の中央値</span><span class="v">{man(pref.stats.price)}</span></div>
+        <div><span class="k">㎡単価</span><span class="v">{unitMan(pref.stats.unitPrice)}</span></div>
+        <div><span class="k">前年比</span><span class={`v ${pref.stats.yoy != null && pref.stats.yoy >= 0 ? 'up' : 'down'}`}>{pct(pref.stats.yoy)}</span></div>
+        <div><span class="k">取引件数</span><span class="v">{pref.stats.latestYearCount.toLocaleString('ja-JP')}件</span></div>
+      </div>
+      <p class="note">※ 中央値は、取引を価格順に並べたときの真ん中の値です。極端に高い（安い）取引の影響を受けにくい指標です。</p>
     </section>
-  ))}
+  )}
+
+  <h2>地域から相場を探す</h2>
+  <p class="note finder-note">市区町村名・町名で絞り込めます（例：新宿、恵比寿）。</p>
+  <input id="q" class="finder" type="search" placeholder="地域名を入力（例：世田谷）" aria-label="地域名で絞り込む" autocomplete="off" />
+  <div id="hits" class="hits" hidden></div>
+
+  {pref && (
+    <>
+      <h2 id="list"><a href={`/${pref.slug}/`}>{pref.name}</a>の市区町村別の相場</h2>
+      <CityTable cities={cities} />
+      <p class="note">㎡単価の高い順。市区町村名を押すと、間取り別・築年数別の相場と町名ごとのページを見られます。</p>
+    </>
+  )}
+
+  <h2>このサイトの使い方</h2>
+  <div class="howto">
+    <div class="step"><span class="n">1</span><p><strong>地域を選ぶ</strong><br />上の表から市区町村を選び、さらに町名で絞り込めます。</p></div>
+    <div class="step"><span class="n">2</span><p><strong>相場を確かめる</strong><br />価格の中央値、㎡単価、前年比、5年間の推移、間取り別・築年数別の価格を確認できます。</p></div>
+    <div class="step"><span class="n">3</span><p><strong>自宅の価格を調べる</strong><br />相場を把握したうえで、実際の査定額を無料で比較できます。</p></div>
+  </div>
+
+  <script is:inline define:vars={{ areas: [
+    ...cities.map((c) => ({ n: c.name, u: `/${c.prefSlug}/${c.code}/` })),
+    ...districts.map((d) => ({ n: `${d.cityName}${d.name}`, u: `/${d.prefSlug}/${d.cityCode}/${encodeURIComponent(d.name)}/` })),
+  ] }}>
+    const q = document.getElementById('q');
+    const hits = document.getElementById('hits');
+    q.addEventListener('input', () => {
+      const v = q.value.trim();
+      if (!v) { hits.hidden = true; hits.innerHTML = ''; return; }
+      const found = areas.filter((a) => a.n.includes(v)).slice(0, 12);
+      hits.hidden = false;
+      hits.innerHTML = found.length
+        ? found.map((a) => `<a href="${a.u}">${a.n}</a>`).join('')
+        : '<p class="note">該当する地域が見つかりませんでした。</p>';
+    });
+  </script>
 </Base>
+
+<style>
+  .hero { padding: 18px 0 4px; }
+  .eyebrow { color: var(--brand); font-weight: 700; font-size: 13px; margin: 0 0 6px; letter-spacing: .04em; }
+  .hero h1 { margin-bottom: 12px; }
+  .headline { margin-top: 10px; }
+  .headline h2.plain { font-size: 15px; margin: 0 0 10px; padding: 0; border: 0; color: var(--muted); font-weight: 700; }
+  .nums { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px 10px; }
+  @media (min-width: 720px) { .nums { grid-template-columns: repeat(4, 1fr); } }
+  .nums .k { display: block; font-size: 12.5px; color: var(--muted); }
+  .nums .v { display: block; font-size: clamp(20px, 5vw, 25px); font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.4; }
+  .up { color: var(--up); }
+  .down { color: var(--down); }
+  .headline .note { margin: 12px 0 0; }
+  .finder-note { margin-bottom: 8px; }
+  .finder {
+    width: 100%; font-size: 16px; padding: 13px 15px; border-radius: 12px;
+    border: 1px solid var(--line-strong); background: var(--surface); color: var(--text);
+  }
+  .finder:focus { outline: 2px solid var(--brand); outline-offset: 1px; }
+  .hits { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .hits :global(a) {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 999px;
+    padding: 7px 14px; text-decoration: none; font-size: 14px;
+  }
+  .howto { display: grid; gap: 10px; }
+  @media (min-width: 720px) { .howto { grid-template-columns: repeat(3, 1fr); } }
+  .step { display: flex; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); }
+  .step .n { flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%; background: var(--brand); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 14px; }
+  .step p { margin: 0; font-size: 14.5px; line-height: 1.75; }
+</style>

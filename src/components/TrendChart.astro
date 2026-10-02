@@ -6,7 +6,7 @@ interface Props { trend: Stats['trend'] }
 const points = Astro.props.trend.filter((t) => t.unitPrice != null) as { year: number; count: number; unitPrice: number }[];
 
 // スマホ幅で文字が小さくなりすぎないよう、描画領域は小さめに取る
-const W = 360, H = 210, L = 36, R = 20, T = 24, B = 28;
+const W = 360, H = 215, L = 38, R = 20, T = 26, B = 30;
 const values = points.map((p) => p.unitPrice / 10000);
 const lo = Math.floor(Math.min(...values) * 0.9);
 const hi = Math.ceil(Math.max(...values) * 1.05);
@@ -14,6 +14,8 @@ const x = (i: number) => L + (points.length === 1 ? (W - L - R) / 2 : (i * (W - 
 const y = (v: number) => T + ((hi - v) * (H - T - B)) / (hi - lo || 1);
 const ticks = [0, 1, 2, 3].map((i) => lo + ((hi - lo) * i) / 3);
 const d = values.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+// 折れ線の下を塗って、推移を直感的に見せる
+const area = points.length >= 2 ? `${d} L${x(values.length - 1).toFixed(1)},${H - B} L${x(0).toFixed(1)},${H - B} Z` : '';
 ---
 {points.length >= 2 ? (
   <figure class="chart">
@@ -24,6 +26,7 @@ const d = values.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixe
           <text x={L - 8} y={y(t) + 4} text-anchor="end" class="tick">{t.toFixed(0)}</text>
         </g>
       ))}
+      <path d={area} class="area" />
       <path d={d} class="line" />
       {values.map((v, i) => (
         <g>
@@ -45,7 +48,8 @@ const d = values.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixe
   .grid { stroke: var(--line); stroke-width: 1; }
   .tick { fill: var(--muted); font-size: 11px; }
   .val { fill: var(--text); font-size: 11px; font-weight: 600; }
-  .line { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linejoin: round; }
-  .dot { fill: var(--surface); stroke: var(--accent); stroke-width: 2.5; }
+  .area { fill: var(--brand); opacity: .10; stroke: none; }
+  .line { fill: none; stroke: var(--brand); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+  .dot { fill: var(--surface); stroke: var(--brand); stroke-width: 2.5; }
   figcaption { margin-top: 4px; }
 </style>

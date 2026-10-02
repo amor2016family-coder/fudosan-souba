@@ -1,7 +1,9 @@
 ---
 // 市区町村・町名ページ共通の相場表示
 import type { Stats } from '../lib/data';
-import { man, unitMan, tsuboMan, pct } from '../lib/format';
+import { data } from '../lib/data';
+import { man, unitMan, tsuboMan, pct, period } from '../lib/format';
+import { summaryPoints, faqItems } from '../lib/seo';
 import TrendChart from './TrendChart.astro';
 import Cta from './Cta.astro';
 import SubCta from './SubCta.astro';
@@ -9,33 +11,46 @@ import SubCta from './SubCta.astro';
 interface Props { place: string; stats: Stats; year: number; commentary: string | null; showDistrict?: boolean }
 const { place, stats: s, year, commentary, showDistrict = true } = Astro.props;
 const paragraphs = commentary?.split(/\n{2,}/) ?? [];
+const points = summaryPoints(place, s, year);
+const faq = faqItems(place, s, year);
 ---
-<section class="tiles">
-  <div class="card tile">
-    <div class="k">取引価格（中央値）</div>
+<div class="badges">
+  <span class="badge">出典：国土交通省 不動産情報ライブラリ</span>
+  <span class="badge">集計：{s.count.toLocaleString('ja-JP')}件（過去5年）</span>
+  <span class="badge">最新データ：{period(data.latest.year, data.latest.quarter)}</span>
+</div>
+
+<section class="tiles" aria-label={`${place}の相場の概要`}>
+  <div class="tile primary">
+    <div class="k">取引価格の中央値</div>
     <div class="v">{man(s.price)}</div>
-    <div class="note">{year}年</div>
+    <div class="sub">{year}年の取引{s.latestYearCount.toLocaleString('ja-JP')}件</div>
   </div>
-  <div class="card tile">
+  <div class="tile">
     <div class="k">㎡単価</div>
     <div class="v">{unitMan(s.unitPrice)}</div>
-    <div class="note">{tsuboMan(s.unitPrice)}</div>
+    <div class="sub">{tsuboMan(s.unitPrice)}</div>
   </div>
-  <div class="card tile">
+  <div class="tile">
     <div class="k">前年比</div>
     <div class={`v ${s.yoy == null ? '' : s.yoy >= 0 ? 'up' : 'down'}`}>{pct(s.yoy)}</div>
-    <div class="note">㎡単価ベース</div>
+    <div class="sub">㎡単価で比較</div>
   </div>
-  <div class="card tile">
-    <div class="k">取引件数</div>
-    <div class="v">{s.latestYearCount.toLocaleString('ja-JP')}件</div>
-    <div class="note">{year}年</div>
+  <div class="tile">
+    <div class="k">専有面積</div>
+    <div class="v">{s.area ? `${s.area}㎡` : '—'}</div>
+    <div class="sub">{year}年の中央値</div>
   </div>
+</section>
+
+<section class="summary" aria-label="このページの要点">
+  <h2 class="plain">このページの要点</h2>
+  <ul>{points.map((p) => <li>{p}</li>)}</ul>
 </section>
 
 {paragraphs.length > 0 && (
   <section>
-    <h2>{place}の相場のポイント</h2>
+    <h2>{place}の相場の読み方</h2>
     {paragraphs.map((p) => <p>{p}</p>)}
   </section>
 )}
@@ -93,17 +108,52 @@ const paragraphs = commentary?.split(/\n{2,}/) ?? [];
     </tbody>
   </table>
 </div>
+<p class="note">国土交通省が公表している取引価格情報です。価格は一定の幅で丸めて公表されています。</p>
+
+{faq.length > 0 && (
+  <>
+    <h2>{place}の相場に関するよくある質問</h2>
+    <div class="faq">
+      {faq.map((f) => (
+        <div class="qa">
+          <h3>{f.q}</h3>
+          <p>{f.a}</p>
+        </div>
+      ))}
+    </div>
+  </>
+)}
 
 <Cta place={place} />
 <SubCta />
 
-
 <style>
-  .tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 8px; }
   @media (min-width: 720px) { .tiles { grid-template-columns: repeat(4, 1fr); } }
-  .tile { padding: 12px 14px; }
-  .k { font-size: 13px; color: var(--muted); }
-  .v { font-size: clamp(18px, 4.5vw, 22px); font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.4; }
+  .tile {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 13px 14px; box-shadow: var(--shadow);
+  }
+  .tile.primary {
+    grid-column: span 2;
+    background: linear-gradient(135deg, var(--brand-soft), var(--surface) 72%);
+    border-color: color-mix(in srgb, var(--brand) 30%, var(--line));
+  }
+  .k { font-size: 12.5px; color: var(--muted); line-height: 1.6; }
+  .v { font-size: clamp(19px, 4.8vw, 24px); font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.45; letter-spacing: -.01em; }
+  .tile.primary .v { font-size: clamp(27px, 7.4vw, 36px); color: var(--brand-ink); }
+  .sub { font-size: 12.5px; color: var(--muted); line-height: 1.6; }
   .up { color: var(--up); }
   .down { color: var(--down); }
+
+  .summary { margin: 22px 0 0; padding: 16px 18px; background: var(--surface-2); border-radius: var(--radius); border: 1px solid var(--line); }
+  .summary h2.plain { font-size: 15px; margin: 0 0 8px; padding: 0; border: 0; color: var(--muted); font-weight: 700; }
+  .summary ul { margin: 0; padding-left: 1.1em; }
+  .summary li { margin-bottom: 6px; }
+  .summary li:last-child { margin-bottom: 0; }
+
+  .faq { display: grid; gap: 10px; }
+  .qa { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); }
+  .qa h3 { margin: 0 0 4px; font-size: 16px; }
+  .qa p { margin: 0; color: var(--muted); font-size: 15px; }
 </style>

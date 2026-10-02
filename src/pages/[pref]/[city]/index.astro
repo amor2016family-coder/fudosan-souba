@@ -2,6 +2,8 @@
 import Base from '../../../layouts/Base.astro';
 import StatsView from '../../../components/StatsView.astro';
 import { data, prefBySlug, commentary } from '../../../lib/data';
+import { faqItems, faqLd, datasetLd } from '../../../lib/seo';
+import { SITE } from '../../../config';
 import type { City } from '../../../lib/data';
 import { man, unitMan } from '../../../lib/format';
 
@@ -13,10 +15,18 @@ const pref = prefBySlug(city.prefSlug);
 const year = city.stats.trend.at(-1)?.year ?? data.latest.year;
 const title = `${city.name}の中古マンション相場【${year}年】間取り別・築年数別の価格`;
 const districts = data.districts.filter((d) => d.cityCode === city.code);
+const url = new URL(`/${pref.slug}/${city.code}/`, SITE.url).href;
+const ld = [faqLd(faqItems(city.name, city.stats, year)), datasetLd(city.name, city.stats, url, data.generatedAt)];
+// 価格帯が近い市区町村（相場を比較したい人のための導線）
+const nearby = data.cities
+  .filter((c) => c.prefSlug === city.prefSlug && c.code !== city.code && c.stats.unitPrice != null)
+  .sort((a, b) => Math.abs((a.stats.unitPrice ?? 0) - (city.stats.unitPrice ?? 0)) - Math.abs((b.stats.unitPrice ?? 0) - (city.stats.unitPrice ?? 0)))
+  .slice(0, 6);
 ---
 <Base
   title={title}
   description={`${pref.name}${city.name}の中古マンションの取引価格は中央値${man(city.stats.price)}（㎡単価${unitMan(city.stats.unitPrice)}）。国土交通省の取引データから、間取り別・築年数別の相場と推移をまとめました。`}
+  jsonLd={ld}
   crumbs={[
     { name: 'トップ', href: '/' },
     { name: pref.name, href: `/${pref.slug}/` },
@@ -25,6 +35,13 @@ const districts = data.districts.filter((d) => d.cityCode === city.code);
 >
   <h1>{title}</h1>
   <StatsView place={city.name} stats={city.stats} year={year} commentary={commentary(city.code)} />
+  {nearby.length > 0 && (
+    <>
+      <h2>相場が近い市区町村</h2>
+      <p>{nearby.map((c) => <a class="chip" href={`/${c.prefSlug}/${c.code}/`}>{c.name}<span>{unitMan(c.stats.unitPrice)}</span></a>)}</p>
+    </>
+  )}
+
   {districts.length > 0 && (
     <>
       <h2>{city.name}の町名別の相場</h2>
@@ -45,3 +62,11 @@ const districts = data.districts.filter((d) => d.cityCode === city.code);
     </>
   )}
 </Base>
+
+<style>
+  .chip {
+    display: inline-flex; align-items: baseline; gap: 6px; margin: 0 8px 8px 0; padding: 7px 14px;
+    border: 1px solid var(--line); border-radius: 999px; background: var(--surface); text-decoration: none; font-size: 14.5px;
+  }
+  .chip span { font-size: 12.5px; color: var(--muted); }
+</style>
