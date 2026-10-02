@@ -42,9 +42,29 @@ const districts = data.districts;
   )}
 
   <h2>地域から相場を探す</h2>
-  <p class="note finder-note">市区町村名・町名で絞り込めます（例：新宿、恵比寿）。</p>
-  <input id="q" class="finder" type="search" placeholder="地域名を入力（例：世田谷）" aria-label="地域名で絞り込む" autocomplete="off" />
-  <div id="hits" class="hits" hidden></div>
+  <div class="finder card">
+    <div class="step-row">
+      <span class="num">1</span>
+      <label for="city">市区町村を選ぶ</label>
+    </div>
+    <select id="city" class="sel">
+      <option value="">選択してください</option>
+      {cities.map((c) => <option value={`/${c.prefSlug}/${c.code}/`} data-code={c.code}>{c.name}</option>)}
+    </select>
+
+    <div class="step-row">
+      <span class="num">2</span>
+      <label for="town">町名を選ぶ<span class="opt">（任意）</span></label>
+    </div>
+    <select id="town" class="sel" disabled>
+      <option value="">市区町村全体の相場を見る</option>
+    </select>
+
+    <a id="go" class="go" href="#list" aria-disabled="true">相場を見る</a>
+    <p class="note">キーワードで探すこともできます。</p>
+    <input id="q" class="kw" type="search" placeholder="地域名を入力（例：世田谷、恵比寿）" aria-label="地域名で絞り込む" autocomplete="off" />
+    <div id="hits" class="hits" hidden></div>
+  </div>
 
   {pref && (
     <>
@@ -64,7 +84,25 @@ const districts = data.districts;
   <script is:inline define:vars={{ areas: [
     ...cities.map((c) => ({ n: c.name, u: `/${c.prefSlug}/${c.code}/` })),
     ...districts.map((d) => ({ n: `${d.cityName}${d.name}`, u: `/${d.prefSlug}/${d.cityCode}/${encodeURIComponent(d.name)}/` })),
-  ] }}>
+  ], towns: districts.map((d) => ({ c: d.cityCode, n: d.name, u: `/${d.prefSlug}/${d.cityCode}/${encodeURIComponent(d.name)}/` })) }}>
+    const city = document.getElementById('city');
+    const town = document.getElementById('town');
+    const go = document.getElementById('go');
+
+    function setGo(url) {
+      go.href = url || '#list';
+      go.setAttribute('aria-disabled', url ? 'false' : 'true');
+    }
+    city.addEventListener('change', () => {
+      const code = city.selectedOptions[0]?.dataset.code;
+      const list = towns.filter((t) => t.c === code);
+      town.innerHTML = '<option value="">市区町村全体の相場を見る</option>' +
+        list.map((t) => `<option value="${t.u}">${t.n}</option>`).join('');
+      town.disabled = list.length === 0;
+      setGo(city.value);
+    });
+    town.addEventListener('change', () => setGo(town.value || city.value));
+
     const q = document.getElementById('q');
     const hits = document.getElementById('hits');
     q.addEventListener('input', () => {
@@ -92,12 +130,24 @@ const districts = data.districts;
   .up { color: var(--up); }
   .down { color: var(--down); }
   .headline .note { margin: 12px 0 0; }
-  .finder-note { margin-bottom: 8px; }
-  .finder {
-    width: 100%; font-size: 16px; padding: 13px 15px; border-radius: 12px;
+  .finder { display: grid; gap: 0; }
+  .step-row { display: flex; align-items: center; gap: 9px; margin-bottom: 7px; }
+  .step-row + .sel { margin-bottom: 16px; }
+  .num { width: 23px; height: 23px; border-radius: 50%; background: var(--brand); color: #fff; display: grid; place-items: center; font-size: 13px; font-weight: 800; }
+  .step-row label { font-weight: 700; font-size: 15px; }
+  .opt { font-weight: 400; color: var(--muted); font-size: 13px; }
+  .sel, .kw {
+    width: 100%; font-size: 16px; padding: 13px 14px; border-radius: 11px;
     border: 1px solid var(--line-strong); background: var(--surface); color: var(--text);
   }
-  .finder:focus { outline: 2px solid var(--brand); outline-offset: 1px; }
+  .sel:focus, .kw:focus { outline: 2px solid var(--brand); outline-offset: 1px; }
+  .go {
+    margin-top: 4px; display: block; text-align: center; background: var(--brand); color: #fff;
+    font-weight: 800; text-decoration: none; padding: 14px; border-radius: 999px; font-size: 16.5px;
+  }
+  .go[aria-disabled="true"] { background: var(--line-strong); color: var(--muted); pointer-events: none; }
+  .finder .note { margin: 16px 0 8px; }
+  .kw { margin-bottom: 0; }
   .hits { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
   .hits :global(a) {
     background: var(--surface); border: 1px solid var(--line); border-radius: 999px;

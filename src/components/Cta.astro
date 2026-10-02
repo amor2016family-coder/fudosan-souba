@@ -1,5 +1,5 @@
 ---
-// 一括査定への導線。紹介リンク未設定のあいだは何も表示しない
+// 売却査定への導線。紹介リンク未設定のあいだは何も表示しない
 import { AFFILIATE } from '../config';
 
 interface Props { place: string; withImpression?: boolean }
@@ -8,8 +8,16 @@ const { place, withImpression = false } = Astro.props;
 {AFFILIATE.url && (
   <aside class="cta">
     <span class="pr">PR</span>
-    <p>{place}のマンション、{AFFILIATE.lead}</p>
-    <a href={AFFILIATE.url} rel="sponsored nofollow noopener" target="_blank">{AFFILIATE.label}</a>
+    <p class="head">{place}のマンション、<br class="br" />いまの売却価格は？</p>
+    <ul class="points">
+      <li>複数の不動産会社の査定額をまとめて比較</li>
+      <li>入力は約1分。完全無料・何度でも利用可</li>
+      <li>相場との差を知ってから売却を検討できる</li>
+    </ul>
+    <a class="btn" href={AFFILIATE.url} rel="sponsored nofollow noopener" target="_blank">
+      {AFFILIATE.label}<span aria-hidden="true">→</span>
+    </a>
+    <p class="fine">提携先の一括査定サービスの申込ページへ移動します</p>
     {withImpression && AFFILIATE.impression && (
       <img src={AFFILIATE.impression} width="1" height="1" alt="" loading="lazy" />
     )}
@@ -17,9 +25,26 @@ const { place, withImpression = false } = Astro.props;
 )}
 
 <style>
-  .cta { position: relative; margin: 28px 0; padding: 20px 16px 16px; border: 2px solid var(--cta); border-radius: 12px; background: var(--surface); text-align: center; }
-  .pr { position: absolute; top: 8px; right: 10px; font-size: 11px; color: var(--muted); border: 1px solid var(--line); padding: 0 6px; border-radius: 4px; }
-  p { margin: 0 0 12px; font-weight: 600; }
+  .cta {
+    position: relative; margin: 28px 0; padding: 20px 18px 18px; border-radius: var(--radius);
+    background: var(--surface); border: 1px solid color-mix(in srgb, var(--cta) 35%, var(--line));
+    box-shadow: var(--shadow); text-align: center;
+  }
+  .pr { position: absolute; top: 9px; right: 11px; font-size: 11px; color: var(--muted); border: 1px solid var(--line); padding: 0 6px; border-radius: 4px; }
+  .head { margin: 0 0 12px; font-weight: 800; font-size: clamp(17px, 4.4vw, 20px); line-height: 1.55; }
+  @media (min-width: 600px) { .br { display: none; } }
+  .points { list-style: none; margin: 0 auto 16px; padding: 0; display: grid; gap: 6px; text-align: left; max-width: 420px; }
+  .points li { position: relative; padding-left: 24px; font-size: 14.5px; line-height: 1.65; color: var(--text); }
+  .points li::before {
+    content: ''; position: absolute; left: 4px; top: .55em;
+    width: 11px; height: 6px; border-left: 2.5px solid var(--cta); border-bottom: 2.5px solid var(--cta);
+    transform: rotate(-45deg);
+  }
+  .btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    background: var(--cta); color: #fff; font-weight: 800; font-size: 17px; text-decoration: none;
+    padding: 15px 20px; border-radius: 999px; box-shadow: 0 6px 16px -8px var(--cta);
+  }
+  .fine { margin: 10px 0 0; font-size: 12px; color: var(--muted); }
   img { position: absolute; width: 1px; height: 1px; border: 0; }
-  a { display: inline-block; background: var(--cta); color: #fff; font-weight: 700; text-decoration: none; padding: 12px 28px; border-radius: 999px; }
 </style>

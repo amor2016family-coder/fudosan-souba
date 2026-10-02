@@ -1,0 +1,31 @@
+---
+// スマホで画面下部に出す固定ボタン。1ページに1つだけ
+import { AFFILIATE } from '../config';
+
+interface Props { place: string }
+const { place } = Astro.props;
+---
+{AFFILIATE.url && (
+  <div class="sticky">
+    <div class="inner">
+      <p><span class="pr">PR</span>{place}の査定額を調べる</p>
+      <a href={AFFILIATE.url} rel="sponsored nofollow noopener" target="_blank">無料で比較</a>
+    </div>
+  </div>
+)}
+
+<style>
+  .sticky {
+    position: sticky; bottom: 0; z-index: 9; margin: 24px -16px 0;
+    background: color-mix(in srgb, var(--surface) 95%, transparent);
+    border-top: 1px solid var(--line); backdrop-filter: blur(6px);
+  }
+  .inner { display: flex; align-items: center; gap: 12px; padding: 10px 16px; max-width: 920px; margin: 0 auto; }
+  p { margin: 0; font-size: 13.5px; color: var(--muted); line-height: 1.5; flex: 1; }
+  .pr { font-size: 10.5px; border: 1px solid var(--line); padding: 0 5px; border-radius: 4px; margin-right: 6px; }
+  a {
+    flex: 0 0 auto; background: var(--cta); color: #fff; font-weight: 800; font-size: 14.5px;
+    text-decoration: none; padding: 10px 18px; border-radius: 999px; white-space: nowrap;
+  }
+  @media (min-width: 720px) { .sticky { display: none; } }
+</style>

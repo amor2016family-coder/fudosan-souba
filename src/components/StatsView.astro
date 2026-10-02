@@ -7,6 +7,7 @@ import { summaryPoints, faqItems } from '../lib/seo';
 import TrendChart from './TrendChart.astro';
 import Cta from './Cta.astro';
 import SubCta from './SubCta.astro';
+import StickyCta from './StickyCta.astro';
 
 interface Props { place: string; stats: Stats; year: number; commentary: string | null; showDistrict?: boolean }
 const { place, stats: s, year, commentary, showDistrict = true } = Astro.props;
@@ -124,8 +125,8 @@ const faq = faqItems(place, s, year);
   </>
 )}
 
-<Cta place={place} />
 <SubCta />
+<StickyCta place={place} />
 
 <style>
   .tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 8px; }
