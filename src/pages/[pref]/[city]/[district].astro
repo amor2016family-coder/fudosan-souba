@@ -8,40 +8,62 @@ import type { District } from '../../../lib/data';
 import { man, unitMan } from '../../../lib/format';
 
 export function getStaticPaths() {
-  return data.districts.map((d) => ({ params: { pref: d.prefSlug, city: d.cityCode, district: d.name }, props: { district: d } }));
+  return [
+    ...data.districts.map((d) => ({ params: { pref: d.prefSlug, city: d.cityCode, district: d.name }, props: { district: d, retired: null } })),
+    // 取引件数が条件を下回って掲載をやめた町名。URLを消すと404になるため、市区町村ページへ案内する
+    ...data.retired.map((r) => ({ params: { pref: r.prefSlug, city: r.cityCode, district: r.name }, props: { district: null, retired: r } })),
+  ];
 }
-const { district: d } = Astro.props as { district: District };
-const pref = prefBySlug(d.prefSlug);
-const city = cityByCode(d.cityCode);
-const place = `${d.cityName}${d.name}`;
-const year = d.stats.trend.at(-1)?.year ?? data.latest.year;
-const title = `${place}の中古マンション相場【${year}年】取引価格と推移`;
-const siblings = data.districts.filter((x) => x.cityCode === d.cityCode && x.name !== d.name);
-const url = new URL(`/${pref.slug}/${city.code}/${encodeURIComponent(d.name)}/`, SITE.url).href;
-const ld = [faqLd(faqItems(place, d.stats, year)), datasetLd(place, d.stats, url, data.generatedAt)];
+type Retired = { prefSlug: string; cityCode: string; cityName: string; name: string };
+const { district: d, retired } = Astro.props as { district: District | null; retired: Retired | null };
+const info = (d ?? retired)!;
+const pref = prefBySlug(info.prefSlug);
+const city = cityByCode(info.cityCode);
+const place = `${info.cityName}${info.name}`;
+const cityUrl = `/${pref.slug}/${city.code}/`;
+const crumbs = [
+  { name: 'トップ', href: '/' },
+  { name: pref.name, href: `/${pref.slug}/` },
+  { name: city.name, href: cityUrl },
+  { name: info.name, href: `${cityUrl}${encodeURIComponent(info.name)}/` },
+];
+const year = d ? (d.stats.trend.at(-1)?.year ?? data.latest.year) : data.latest.year;
+const title = d
+  ? `${place}の中古マンション相場【${year}年】取引価格と推移`
+  : `${place}の中古マンション相場｜${city.name}の相場をご覧ください`;
+const siblings = d ? data.districts.filter((x) => x.cityCode === info.cityCode && x.name !== info.name) : [];
+const url = new URL(`${cityUrl}${encodeURIComponent(info.name)}/`, SITE.url).href;
+const ld = d ? [faqLd(faqItems(place, d.stats, year)), datasetLd(place, d.stats, url, data.generatedAt)] : [];
+const description = d
+  ? `${pref.name}${place}の中古マンションの取引価格は中央値${man(d.stats.price)}（㎡単価${unitMan(d.stats.unitPrice)}）。過去5年の取引${d.stats.count.toLocaleString('ja-JP')}件をもとに、国土交通省の取引データから価格の推移をまとめました。`
+  : `${pref.name}${place}は、直近5年の取引件数が少なく相場を算出できないため、${city.name}全体の中古マンション相場をご覧ください。`;
 ---
-<Base
-  title={title}
-  description={`${pref.name}${place}の中古マンションの取引価格は中央値${man(d.stats.price)}（㎡単価${unitMan(d.stats.unitPrice)}）。過去5年の取引${d.stats.count.toLocaleString('ja-JP')}件をもとに、国土交通省の取引データから価格の推移をまとめました。`}
-  jsonLd={ld}
-  crumbs={[
-    { name: 'トップ', href: '/' },
-    { name: pref.name, href: `/${pref.slug}/` },
-    { name: city.name, href: `/${pref.slug}/${city.code}/` },
-    { name: d.name, href: `/${pref.slug}/${city.code}/${d.name}/` },
-  ]}
->
-  <h1>{title}</h1>
-  <StatsView place={place} stats={d.stats} year={year} commentary={commentary(`${d.cityCode}-${d.name}`)} showDistrict={false} />
-  {siblings.length > 0 && (
+<Base title={title} description={description} jsonLd={ld} crumbs={crumbs}>
+  {d ? (
     <>
-      <h2>{city.name}のほかの町名</h2>
-      <p>{siblings.map((s) => <a href={`/${pref.slug}/${city.code}/${s.name}/`} class="chip">{s.name}</a>)}</p>
-      <p><a href={`/${pref.slug}/${city.code}/`}>{city.name}全体の相場を見る →</a></p>
+      <h1>{title}</h1>
+      <StatsView place={place} stats={d.stats} year={year} commentary={commentary(`${info.cityCode}-${info.name}`)} showDistrict={false} />
+      {siblings.length > 0 && (
+        <>
+          <h2>{city.name}のほかの町名</h2>
+          <p>{siblings.map((s) => <a href={`${cityUrl}${encodeURIComponent(s.name)}/`} class="chip">{s.name}</a>)}</p>
+          <p><a href={cityUrl}>{city.name}全体の相場を見る →</a></p>
+        </>
+      )}
+    </>
+  ) : (
+    <>
+      <h1>{place}の中古マンション相場</h1>
+      <div class="card notice">
+        <p>{place}は、直近5年の取引件数が少なく、相場として示せる数値が算出できませんでした。取引件数が増えれば、再び掲載します。</p>
+        <p><a href={cityUrl}>{city.name}全体の中古マンション相場を見る →</a></p>
+      </div>
+      <p class="note">※ 当サイトでは、数値のぶれが大きくなるため、5年間で30件未満の地域はページを作成していません。</p>
     </>
   )}
 </Base>
 
 <style>
   .chip { display: inline-block; margin: 0 6px 8px 0; padding: 7px 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); text-decoration: none; font-size: 14px; line-height: 1.2; }
+  .notice p:last-child { margin-bottom: 0; font-weight: 700; }
 </style>

@@ -1,0 +1,20 @@
+---
+import Base from '../layouts/Base.astro';
+import { data } from '../lib/data';
+const pref = data.prefectures[0];
+const popular = data.cities.slice(0, 12);
+---
+<Base title="お探しのページが見つかりません" description="お探しのページは移動または削除された可能性があります。地域から相場を探せます。">
+  <h1>お探しのページが見つかりません</h1>
+  <p class="lead">URLが変わったか、取引件数が少なくなり掲載を終えたページかもしれません。下から地域を選び直してください。</p>
+  <div class="card">
+    <p><a href="/">トップページへ戻る</a></p>
+    {pref && <p><a href={`/${pref.slug}/`}>{pref.name}の市区町村別の相場を見る</a></p>}
+  </div>
+  <h2>よく見られている地域</h2>
+  <p>{popular.map((c) => <a class="chip" href={`/${c.prefSlug}/${c.code}/`}>{c.name}</a>)}</p>
+</Base>
+
+<style>
+  .chip { display: inline-block; margin: 0 8px 8px 0; padding: 7px 14px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); text-decoration: none; font-size: 14.5px; }
+</style>

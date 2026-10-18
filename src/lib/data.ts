@@ -23,6 +23,8 @@ export type SiteData = {
   prefectures: Prefecture[];
   cities: City[];
   districts: District[];
+  /** 取引件数が条件を下回り、掲載をやめた町名。URLは残し、市区町村ページへ案内する */
+  retired: { prefSlug: string; cityCode: string; cityName: string; name: string }[];
 };
 
 export const data: SiteData = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'data', 'site.json'), 'utf8'));

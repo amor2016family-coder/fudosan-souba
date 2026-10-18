@@ -1,9 +1,14 @@
 // data/raw の取引データを、サイトで使う統計（data/site.json）にまとめる
 import fs from 'node:fs';
+import path from 'node:path';
 import {
-  PREFECTURES, YEARS_BACK, TARGET_TYPE, SAMPLE_FLAG, SITE_DATA,
+  PREFECTURES, YEARS_BACK, TARGET_TYPE, SAMPLE_FLAG, SITE_DATA, ROOT,
   quartersBack, rawFile, readJson, writeJson,
 } from './lib.mjs';
+
+// 一度公開した町名ページの記録。四半期ごとの入れ替わりでURLが消えると、
+// 検索エンジンから404として扱われるため、消えたページは「案内ページ」に切り替える
+const PUBLISHED_FILE = path.join(ROOT, 'data', 'published.json');
 
 // これより件数が少ない集計値は、ぶれが大きいので表示しない
 const MIN_COUNT = 5;
@@ -102,8 +107,10 @@ const quarters = quartersBack(YEARS_BACK);
 const latest = quarters.at(-1);
 const FULL_YEARS = [...new Set(quarters.map((q) => q.year))]
   .filter((y) => quarters.filter((q) => q.year === y).length === 4);
+const published = readJson(PUBLISHED_FILE, { districts: [] });
 const site = {
   generatedAt: new Date().toISOString(),
+  retired: [],
   isSample: fs.existsSync(SAMPLE_FLAG),
   latest,
   prefectures: [],
@@ -157,8 +164,15 @@ for (const pref of PREFECTURES) {
   });
 }
 
+// 以前は公開していたが、今回の集計で条件を満たさなくなった町名を拾う
+const liveKeys = new Set(site.districts.map((d) => `${d.prefSlug}/${d.cityCode}/${d.name}`));
+const known = new Map(published.districts.map((d) => [`${d.prefSlug}/${d.cityCode}/${d.name}`, d]));
+for (const d of site.districts) known.set(`${d.prefSlug}/${d.cityCode}/${d.name}`, { prefSlug: d.prefSlug, cityCode: d.cityCode, cityName: d.cityName, name: d.name });
+site.retired = [...known.entries()].filter(([k]) => !liveKeys.has(k)).map(([, d]) => d);
+writeJson(PUBLISHED_FILE, { districts: [...known.values()] });
+
 writeJson(SITE_DATA, site);
 console.log(
-  `集計完了: ${site.prefectures.length}都道府県 / ${site.cities.length}市区町村 / ${site.districts.length}町名` +
+  `集計完了: ${site.prefectures.length}都道府県 / ${site.cities.length}市区町村 / ${site.districts.length}町名 / 案内ページ${site.retired.length}件` +
   (site.isSample ? '（サンプルデータ）' : ''),
 );
