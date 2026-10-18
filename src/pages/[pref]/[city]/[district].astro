@@ -5,7 +5,7 @@ import { data, prefBySlug, cityByCode, commentary } from '../../../lib/data';
 import { faqItems, faqLd, datasetLd } from '../../../lib/seo';
 import { SITE } from '../../../config';
 import type { District } from '../../../lib/data';
-import { man } from '../../../lib/format';
+import { man, unitMan } from '../../../lib/format';
 
 export function getStaticPaths() {
   return data.districts.map((d) => ({ params: { pref: d.prefSlug, city: d.cityCode, district: d.name }, props: { district: d } }));
@@ -22,7 +22,7 @@ const ld = [faqLd(faqItems(place, d.stats, year)), datasetLd(place, d.stats, url
 ---
 <Base
   title={title}
-  description={`${pref.name}${place}の中古マンションの取引価格は中央値${man(d.stats.price)}。国土交通省の取引データから、実際の取引事例と価格の推移をまとめました。`}
+  description={`${pref.name}${place}の中古マンションの取引価格は中央値${man(d.stats.price)}（㎡単価${unitMan(d.stats.unitPrice)}）。過去5年の取引${d.stats.count.toLocaleString('ja-JP')}件をもとに、国土交通省の取引データから価格の推移をまとめました。`}
   jsonLd={ld}
   crumbs={[
     { name: 'トップ', href: '/' },
