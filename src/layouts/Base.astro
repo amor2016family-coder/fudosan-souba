@@ -67,7 +67,7 @@ const graph = [siteLd, ...breadcrumbLd, ...jsonLd];
           <span class="name">{SITE.name}</span>
         </a>
         <nav class="nav" aria-label="メインメニュー">
-          <a href="/tokyo/">東京都の相場</a>
+          {data.prefectures.map((p) => <a href={`/${p.slug}/`}>{p.name}</a>)}
           <a href="/about/">サイトについて</a>
         </nav>
       </div>
@@ -92,7 +92,7 @@ const graph = [siteLd, ...breadcrumbLd, ...jsonLd];
             <p>国土交通省の不動産取引価格情報をもとに、市区町村・町名ごとの中古マンション相場をまとめています。最終更新：{updated}</p>
           </div>
           <nav class="f-links" aria-label="フッターメニュー">
-            <a href="/tokyo/">東京都の相場</a>
+            {data.prefectures.map((p) => <a href={`/${p.slug}/`}>{p.name}の相場</a>)}
             <a href="/about/">運営者情報</a>
             <a href="/privacy/">プライバシーポリシー</a>
           </nav>

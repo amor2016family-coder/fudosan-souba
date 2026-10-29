@@ -20,7 +20,7 @@ ${SITE.description}
 ## 掲載範囲
 - 都道府県: ${data.prefectures.map((p) => p.name).join('、')}
 - 市区町村: ${data.cities.length}件 / 町名: ${data.districts.length}件
-${pref ? `- ${pref.name}全体（${year}年）: 取引価格の中央値 ${man(pref.stats.price)}、㎡単価 ${unitMan(pref.stats.unitPrice)}、取引件数 ${pref.stats.latestYearCount}件` : ''}
+${data.prefectures.map((p) => `- ${p.name}全体（${p.stats.trend.at(-1)?.year ?? data.latest.year}年）: 取引価格の中央値 ${man(p.stats.price)}、㎡単価 ${unitMan(p.stats.unitPrice)}、取引件数 ${p.stats.latestYearCount}件`).join('\n')}
 
 ## 主なページ
 - トップ: ${SITE.url}/

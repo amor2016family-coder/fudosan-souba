@@ -7,8 +7,11 @@ export const RAW_DIR = path.join(ROOT, 'data', 'raw');
 export const SITE_DATA = path.join(ROOT, 'data', 'site.json');
 export const SAMPLE_FLAG = path.join(RAW_DIR, 'SAMPLE');
 
-// 対象の都道府県（まずは東京都のみ。広げるときはここに追加）
-export const PREFECTURES = [{ code: '13', name: '東京都', slug: 'tokyo' }];
+// 対象の都道府県（広げるときはここに追加する。1県ずつ増やす：解説文が1日30件しか書けないため）
+export const PREFECTURES = [
+  { code: '13', name: '東京都', slug: 'tokyo' },
+  { code: '14', name: '神奈川県', slug: 'kanagawa' },
+];
 
 // 何年分さかのぼって取得・集計するか
 export const YEARS_BACK = 5;
