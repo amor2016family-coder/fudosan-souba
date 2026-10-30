@@ -67,7 +67,7 @@ const graph = [siteLd, ...breadcrumbLd, ...jsonLd];
           <span class="name">{SITE.name}</span>
         </a>
         <nav class="nav" aria-label="メインメニュー">
-          {data.prefectures.map((p) => <a href={`/${p.slug}/`}>{p.name}</a>)}
+          <a href="/#list">エリアから探す</a>
           <a href="/about/">サイトについて</a>
         </nav>
       </div>
@@ -162,9 +162,9 @@ const graph = [siteLd, ...breadcrumbLd, ...jsonLd];
     border-bottom: 1px solid var(--line);
   }
   .site-header .bar { height: 58px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-  .logo { display: inline-flex; align-items: center; gap: 9px; text-decoration: none; color: var(--text); }
+  .logo { display: inline-flex; align-items: center; gap: 9px; text-decoration: none; color: var(--text); flex-shrink: 0; }
   .logo .mark { width: 30px; height: 30px; border-radius: 9px; display: block; }
-  .logo .name { font-weight: 800; font-size: 17px; letter-spacing: .02em; }
+  .logo .name { font-weight: 800; font-size: 17px; letter-spacing: .02em; white-space: nowrap; }
   .nav { display: flex; gap: 14px; font-size: 13.5px; }
   .nav a { color: var(--muted); text-decoration: none; white-space: nowrap; }
 
