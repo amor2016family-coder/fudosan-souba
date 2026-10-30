@@ -5,10 +5,12 @@ import { SITE } from '../config';
 import { data } from '../lib/data';
 import { man, unitMan, pct, period } from '../lib/format';
 
-const pref = data.prefectures[0];
-const year = pref?.stats.trend.at(-1)?.year ?? data.latest.year;
-const cities = data.cities.filter((c) => c.prefSlug === pref?.slug);
+const prefs = data.prefectures;
+const prefNames = prefs.map((p) => p.name).join('・');
+const cities = data.cities;
 const districts = data.districts;
+const citiesOf = (slug: string) => cities.filter((c) => c.prefSlug === slug);
+const prefName = (slug: string) => prefs.find((p) => p.slug === slug)?.name ?? '';
 ---
 <Base
   title={`${SITE.name}｜実際の取引データでわかる中古マンション相場`}
@@ -20,7 +22,7 @@ const districts = data.districts;
     <h1>実際に売れた価格でわかる<br />中古マンションの相場</h1>
     <p class="lead">
       不動産会社の「売り出し価格」ではなく、<strong>実際に取引された価格</strong>を市区町村・町名ごとに集計しています。
-      東京都の{data.cities.length}市区町村・{districts.length}町名、全{(data.cities.length + districts.length + 1).toLocaleString('ja-JP')}ページ。無料・登録不要です。
+      {prefNames}の{cities.length}市区町村・{districts.length}町名、全{(cities.length + districts.length + prefs.length).toLocaleString('ja-JP')}ページ。無料・登録不要です。
     </p>
     <div class="badges">
       <span class="badge">出典：国土交通省 不動産情報ライブラリ</span>
@@ -29,18 +31,18 @@ const districts = data.districts;
     </div>
   </section>
 
-  {pref && (
+  {prefs.map((pref) => (
     <section class="headline card">
-      <h2 class="plain">{pref.name}全体の相場（{year}年）</h2>
+      <h2 class="plain">{pref.name}全体の相場（{pref.stats.trend.at(-1)?.year ?? data.latest.year}年）</h2>
       <div class="nums">
         <div><span class="k">取引価格の中央値</span><span class="v">{man(pref.stats.price)}</span></div>
         <div><span class="k">㎡単価</span><span class="v">{unitMan(pref.stats.unitPrice)}</span></div>
         <div><span class="k">前年比</span><span class={`v ${pref.stats.yoy != null && pref.stats.yoy >= 0 ? 'up' : 'down'}`}>{pct(pref.stats.yoy)}</span></div>
         <div><span class="k">取引件数</span><span class="v">{pref.stats.latestYearCount.toLocaleString('ja-JP')}件</span></div>
       </div>
-      <p class="note">※ 中央値は、取引を価格順に並べたときの真ん中の値です。極端に高い（安い）取引の影響を受けにくい指標です。</p>
     </section>
-  )}
+  ))}
+  <p class="note">※ 中央値は、取引を価格順に並べたときの真ん中の値です。極端に高い（安い）取引の影響を受けにくい指標です。</p>
 
   <h2>地域から相場を探す</h2>
   <div class="finder card">
@@ -50,7 +52,11 @@ const districts = data.districts;
     </div>
     <select id="city" class="sel">
       <option value="">選択してください</option>
-      {cities.map((c) => <option value={`/${c.prefSlug}/${c.code}/`} data-code={c.code}>{c.name}</option>)}
+      {prefs.map((p) => (
+        <optgroup label={p.name}>
+          {citiesOf(p.slug).map((c) => <option value={`/${c.prefSlug}/${c.code}/`} data-code={c.code}>{c.name}</option>)}
+        </optgroup>
+      ))}
     </select>
 
     <div class="step-row">
@@ -63,17 +69,17 @@ const districts = data.districts;
 
     <a id="go" class="go" href="#list" aria-disabled="true">相場を見る</a>
     <p class="note">キーワードで探すこともできます。</p>
-    <input id="q" class="kw" type="search" placeholder="地域名を入力（例：世田谷、恵比寿）" aria-label="地域名で絞り込む" autocomplete="off" />
+    <input id="q" class="kw" type="search" placeholder="地域名を入力（例：世田谷、横浜、恵比寿）" aria-label="地域名で絞り込む" autocomplete="off" />
     <div id="hits" class="hits" hidden></div>
   </div>
 
-  {pref && (
+  {prefs.map((pref, i) => (
     <>
-      <h2 id="list"><a href={`/${pref.slug}/`}>{pref.name}</a>の市区町村別の相場</h2>
-      <CityTable cities={cities} />
-      <p class="note">㎡単価の高い順。市区町村名を押すと、間取り別・築年数別の相場と町名ごとのページを見られます。</p>
+      <h2 id={i === 0 ? 'list' : undefined}><a href={`/${pref.slug}/`}>{pref.name}</a>の市区町村別の相場</h2>
+      <CityTable cities={citiesOf(pref.slug)} />
     </>
-  )}
+  ))}
+  <p class="note">㎡単価の高い順。市区町村名を押すと、間取り別・築年数別の相場と町名ごとのページを見られます。</p>
 
   <h2>このサイトの使い方</h2>
   <div class="howto">
@@ -83,8 +89,8 @@ const districts = data.districts;
   </div>
 
   <script is:inline define:vars={{ areas: [
-    ...cities.map((c) => ({ n: c.name, u: `/${c.prefSlug}/${c.code}/` })),
-    ...districts.map((d) => ({ n: `${d.cityName}${d.name}`, u: `/${d.prefSlug}/${d.cityCode}/${encodeURIComponent(d.name)}/` })),
+    ...cities.map((c) => ({ n: `${prefName(c.prefSlug)}${c.name}`, u: `/${c.prefSlug}/${c.code}/` })),
+    ...districts.map((d) => ({ n: `${prefName(d.prefSlug)}${d.cityName}${d.name}`, u: `/${d.prefSlug}/${d.cityCode}/${encodeURIComponent(d.name)}/` })),
   ], towns: districts.map((d) => ({ c: d.cityCode, n: d.name, u: `/${d.prefSlug}/${d.cityCode}/${encodeURIComponent(d.name)}/` })) }}>
     const city = document.getElementById('city');
     const town = document.getElementById('town');
